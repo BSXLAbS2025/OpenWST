@@ -4,62 +4,48 @@
 ARCH ?= arm
 CROSS_COMPILE ?= arm-linux-gnueabi-
 
-# Путь к тулчейну (измени под свой)
 TOOLCHAIN ?= /usr/bin
-
 CC = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)ld
 AS = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar
 
-# Оптимизация и отладка
+# Для Exynos 3475 (ARM Cortex-A7, ARMv7-A)
 CFLAGS = -O2 -g -Wall -Wextra -Wno-unused-parameter
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -ffreestanding -fno-stack-protector
 CFLAGS += -Iinclude
+CFLAGS += -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard
+CFLAGS += -mcpu=cortex-a7
 
 LDFLAGS = -T linker.ld -nostdlib
 
-# Исходные файлы ядра
 KERNEL_SRCS = \
     arch/arm/boot/start.S \
     arch/arm/boot/entry.c \
     kernel/main.c \
-    kernel/syscalls.c \
-    kernel/sched.c \
-    kernel/mm.c \
-    kernel/printk.c \
-    drivers/mali_stub.c \
-    drivers/ashmem_stub.c \
-    drivers/binder_stub.c
+    kernel/printk.c
 
 KERNEL_OBJS = $(KERNEL_SRCS:.c=.o)
 KERNEL_OBJS := $(KERNEL_OBJS:.S=.o)
 
-# Цель по умолчанию
 all: kernel.bin
 
-# Компиляция .S (ассемблер)
 %.o: %.S
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -march=armv7-a -c $< -o $@
 
-# Компиляция .c
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Линковка ядра
 kernel.elf: $(KERNEL_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
-# Конвертация в плоский бинарник (для прошивки)
 kernel.bin: kernel.elf
 	$(CROSS_COMPILE)objcopy -O binary $< $@
 
-# Очистка
 clean:
 	rm -f $(KERNEL_OBJS) kernel.elf kernel.bin
 
-# Установка на устройство (через fastboot/heimdall)
 install: kernel.bin
 	heimdall flash --KERNEL kernel.bin
 
