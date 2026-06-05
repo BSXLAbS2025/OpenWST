@@ -1,7 +1,7 @@
 ENTRY(_start)
 
 SECTIONS {
-    . = 0xC0000000;  /* Адрес загрузки ядра (для ARM) */
+    . = 0xC0000000;
     
     .text : {
         *(.text.boot)
@@ -23,6 +23,6 @@ SECTIONS {
     }
     
     . = ALIGN(4096);
-    . = . + 0x4000;  /* стек 16KB */
+    . = . + 0x4000;
     stack_top = .;
 }
