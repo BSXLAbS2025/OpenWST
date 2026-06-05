@@ -23,7 +23,7 @@ _start:
     
     @ Если kernel_main вернулся — зависнуть
 hang:
-    wfi
+    nop          @ вместо wfi (не все ARM поддерживают wfi)
     b hang
 
 @ Простая реализация memset
